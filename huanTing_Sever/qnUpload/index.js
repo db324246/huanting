@@ -1,18 +1,18 @@
 let qiniu = require('qiniu');
 let formidable = require('formidable');
 let fs = require('fs');
-let config = require('./config.js');
+let qnConfig = require('./config.js');
 
 let qn = {};
 
 //要上传的空间
-let bucket = config.bucket;   //七牛云存储的存储空间名
+let bucket = qnConfig.bucket;   //七牛云存储的存储空间名
 
 //构建上传策略函数   （获取七牛上传token）
 qn.uptoken = function(bucket) {
   var putPolicy = new qiniu.rs.PutPolicy({ scope: bucket });
-  var accessKey = config.accessKey;   
-  var secretKey = config.secretKey;
+  var accessKey = qnConfig.accessKey;   
+  var secretKey = qnConfig.secretKey;
   var mac = new qiniu.auth.digest.Mac(accessKey, secretKey);
   var uploadToken=putPolicy.uploadToken(mac);
   return uploadToken;
@@ -33,9 +33,11 @@ qn.upImg = function(req,callback){
       console.log('err==',err);
       return callback(callbackObj);
     }
-    console.log(files.file.path);
+    // console.log(files.file);
+    // console.log(fields);
     //上传到七牛后保存的文件名
-    let key = new Date().getTime();
+    // let key = new Date().getTime();
+    let key = files.file.name;
     //生成上传 Token
     let token = qn.uptoken(bucket);
     //要上传文件的本地路径
@@ -54,20 +56,23 @@ qn.upImg = function(req,callback){
         return callback(callbackObj);
       }
       if (respInfo.statusCode == 200) {//上传成功
-        console.log(respBody);
+        // console.log(respBody);
+        // console.log(respInfo);
+        // console.log(config);
+        // console.log(key);
         // 输出 JSON 格式  xxx填写自己在七牛中设置的自定义域名
         var response = {
-            "url":config.url+key
+          "url": qnConfig.url + '/' + key
         };
-        console.log(response);
+        // console.log(response);
         // res.end(JSON.stringify(response));
-        callbackObj.status = 0;
+        callbackObj.status = 200;
         callbackObj.data = response;
         return callback(callbackObj);
       } else {//上传失败
-        console.log(respInfo.statusCode);
-        console.log(respBody);
-        callbackObj.status = 1;
+        // console.log(respInfo.statusCode);
+        // console.log(respBody);
+        callbackObj.status = 500;
         callbackObj.msg = respBody;
         return callback(callbackObj);
       }

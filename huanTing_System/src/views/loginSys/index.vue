@@ -3,52 +3,38 @@
     <div class="login_box">
       <div class="login_title">幻听音乐</div>
       <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
-        <el-form-item label="用户名" prop="nickName">
-          <el-input v-model.number="ruleForm.nickName"></el-input>
+        <el-form-item label="账号" prop="nickName">
+          <el-input v-model="ruleForm.nickName"></el-input>
         </el-form-item>
         <el-form-item label="密码" prop="password">
-          <el-input type="passwordword" v-model="ruleForm.password" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
-          <el-button @click="resetForm('ruleForm')">重置</el-button>
+          <el-input type="password" v-model="ruleForm.password" autocomplete="off"></el-input>
         </el-form-item>
       </el-form>
+      <div class="btn_group">
+        <el-button type="primary" @click="submitForm('ruleForm')">登录</el-button>
+        <el-button @click="resetForm('ruleForm')">重置</el-button>
+      </div>
     </div>
   </div>
 </template>
 <script>
 import { loginSys } from '@/api/login.js';
+import { validateIdCode, validatePassword } from '@utils/valide.js';
 export default {
   data() {
-    var checknickName = (rule, value, callback) => {
-      if (!value) {
-        return callback(new Error('用户名不能为空'));
-      }
-      return callback()
-    };
-    var validatepassword = (rule, value, callback) => {
-      if (value === '') {
-        callback(new Error('请输入密码'));
-      } else {
-        if (this.ruleForm.checkpassword !== '') {
-          this.$refs.ruleForm.validateField('checkpassword');
-        }
-        callback();
-      }
-    };
-
     return {
       ruleForm: {
-        password: '123123',
-        nickName: 'tingting'
+        password: 'tt123456',
+        nickName: 'tingting123'
       },
       rules: {
         password: [
-          { validator: validatepassword, trigger: 'blur' }
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { validator: validatePassword, trigger: 'blur' }
         ],
         nickName: [
-          { validator: checknickName, trigger: 'blur' }
+          { required: true, message: '请输入登录名', trigger: 'blur' },
+          { validator: validateIdCode, trigger: 'blur' }
         ]
       }
     };
@@ -82,7 +68,6 @@ export default {
 </script>
 
 <style lang="less" scoped>
-
 .login_container {
   position: relative;
   height: 100%;
@@ -98,7 +83,7 @@ export default {
   height: 400px;
   border-radius: 20px;
   box-shadow: 0 0 10px rgba(0,0,0,.7);
-  background-color: #ffffff80;
+  background-color: #ffffff99;
 }
 .login_title {
   margin-top: 40px;
@@ -107,10 +92,11 @@ export default {
   color: #33333390;
 }
 .el-form{
-  position: absolute;
-  top: 60%;
-  left: 50%;
-  transform: translate(-60%, -50%);
+  margin-top: 40px;
   width: 400px;
+}
+.btn_group {
+  padding-left: 160px;
+  margin-top: 40px;
 }
 </style>

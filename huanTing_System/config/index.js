@@ -12,8 +12,8 @@ module.exports = {
     assetsPublicPath: '/',
     proxyTable: {
       '/system': {
-        // target: 'http://192.168.199.141:3000',
-        target: 'http://192.168.0.107:3000',
+        target: 'http://192.168.199.141:3000',
+        // target: 'http://192.168.0.107:3000',
         changeOrigin: true,
         pathRewrite: {
           '^/system': '/system'

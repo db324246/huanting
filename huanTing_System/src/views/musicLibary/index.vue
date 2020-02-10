@@ -34,16 +34,12 @@
         prop="album"
         label="专辑">
       </el-table-column>
-      <el-table-column
-        prop="albumArt"
-        label="专辑封面">
-      </el-table-column>
-      <el-table-column
-        prop="musicSrc"
-        label="歌曲外链">
-      </el-table-column>
-      <el-table-column label="操作" width="150">
+      <el-table-column label="操作" width="250">
         <template slot-scope="scope">
+          <el-button
+            size="mini"
+            type="primary"
+            @click="showAudioDialog(scope.row)">试听</el-button>
           <el-button
             size="mini"
             type="primary"
@@ -76,20 +72,47 @@
       width="680px"
       :before-close="handleClose">
       <el-form style="padding-right: 50px;" ref="musicForm" :rules="rules" :model="musicForm" label-width="80px">
+        <el-form-item label="歌曲上传" prop="musicSrc">
+          <audio :src="musicForm.musicSrc" controls="controls"></audio>
+          <el-upload
+            class="upload-demo"
+            :action="uploadApi"
+            :headers="uploadHeaders"
+            :show-file-list="false"
+            :on-success="handleMusicSuccess"
+            :before-upload="beforeMusicUpload">
+            <el-button size="small" type="primary">点击上传</el-button>
+            <div slot="tip" class="el-upload__tip">只能上传音乐文件，且不超过500M</div>
+          </el-upload>
+        </el-form-item>
         <el-form-item label="名称" prop="title">
           <el-input v-model="musicForm.title"></el-input>
         </el-form-item>
         <el-form-item label="歌手名" prop="singerName">
-          <el-input v-model="musicForm.singerName"></el-input>
+          <el-input @blur="checkSingerFunc" v-model="musicForm.singerName"></el-input>
         </el-form-item>
-        <el-form-item label="专辑" prop="album">
-          <el-input v-model="musicForm.album"></el-input>
+        <el-form-item label="专辑名称" prop="albumId">
+          <el-select v-model="musicForm.albumId" :disabled="albumList.length === 0" :placeholder="albumList.length === 0 ? '歌手专辑未维护' : '请选择'">
+            <el-option
+              v-for="item in albumList"
+              :key="item.id"
+              :label="item.album"
+              :value="item.id">
+            </el-option>
+          </el-select>
         </el-form-item>
-        <el-form-item label="专辑封面" prop="albumArt">
-          <el-input v-model="musicForm.albumArt" ></el-input>
-        </el-form-item>
-        <el-form-item label="歌曲外链" prop="musicSrc">
-          <el-input v-model="musicForm.musicSrc"></el-input>
+        <el-form-item label="歌词上传" prop="musicLrc">
+          <el-upload
+            class="upload-demo"
+            :action="uploadApi"
+            :headers="uploadHeaders"
+            :show-file-list="true"
+            :file-list="fileList"
+            :on-success="handleLrcSuccess"
+            :before-upload="beforeLrcUpload">
+            <el-button size="small" type="primary">点击上传</el-button>
+            <div slot="tip" class="el-upload__tip">只能上传.lrc文件</div>
+          </el-upload>
         </el-form-item>
       </el-form>
       <span slot="footer" style="padding-right: 50px;">
@@ -100,7 +123,7 @@
   </div>
 </template>
 <script>
-import { musicTable, deleteMusic, addMusic, updataMusic } from '@/api/music.js';
+import { musicTable, checkSinger, deleteMusic, addMusic, updataMusic } from '@/api/music.js';
 
 export default {
   data() {
@@ -117,16 +140,20 @@ export default {
       musicForm: {
         title: '',
         musicSrc: '',
+        musicLrc: '',
         singerName: '',
+        singerId: undefined,
         album: '',
-        albumArt: ''
+        albumId: undefined
       },
+      albumList: [],
+      fileList: [],
       rules: {
         title: [
-          { required: true, message: '请输入歌手名称', trigger: 'blur' }
+          { required: true, message: '请输入歌曲名称', trigger: 'blur' }
         ],
         musicSrc: [
-          { required: true, message: '请输入歌曲外链', trigger: 'blur' }
+          { required: true, message: '请上传歌曲', trigger: 'blur' }
         ]
       },
       ids: []
@@ -136,6 +163,7 @@ export default {
     this.getMusicList();
   },
   methods: {
+    // 获取曲库列表
     getMusicList() {
       musicTable(this.queryList).then(res => {
         this.musicList = res.data.records;
@@ -144,30 +172,70 @@ export default {
         console.log(err);
       })
     },
+    // 音乐上传成功的回调
+    handleMusicSuccess(res, file) {
+      if (res.success) {
+        this.$message.success('上传成功')
+        const nameArr = file.name.split('.')[0].split(' - ')
+        this.musicForm.musicSrc = res.data.url
+        this.musicForm.title = nameArr[0]
+        this.musicForm.singerName = nameArr[1]
+        this.checkSingerFunc()
+      }
+    },
+    // 歌词上传成功的回调
+    handleLrcSuccess(res) {
+      if (res.success) {
+        this.$message.success('上传成功')
+        this.musicForm.musicLrc = res.data.url
+      }
+    },
+    // 歌手信息查询
+    checkSingerFunc() {
+      if (this.musicForm.singerName) {
+        const queryObj = {
+          singerName: this.musicForm.singerName
+        }
+        checkSinger(queryObj).then(res => {
+          if (res.success) {
+            this.musicForm.singerId = res.data.singerId
+            this.albumList = res.data.albumList
+          }
+        }).catch(err => console.log(err))
+      }
+    },
+    // 保存添加或编辑表单
     saveForm() {
       this.$refs.musicForm.validate(valide => {
         if (valide) {
+          if (this.musicForm.albumId) {
+            this.musicForm.album = this.albumList.filter(item => item.id === this.musicForm.albumId)[0].album
+          }
           if (this.editFlag) this.updateMusic()
           else {
-            if (!this.musicForm.singerName) {
-              this.musicForm.singerName = '未知歌手'
-            }
             this.addMusic()
           }
         }
       })
     },
+    // 编辑歌曲信息
     updateMusic() {
       updataMusic(this.musicForm).then(res => {
         if (res.success) {
           this.$message.success('编辑成功')
           this.getMusicList()
           this.handleClose()
+          this.editFlag = false
         }
       }).catch(err => console.log(err))
     },
+    // 添加歌曲
     addMusic() {
-      addMusic(this.musicForm).then(res => {
+      const musicForm = Object.assign({}, this.musicForm)
+      if (!this.musicForm.singerName) {
+        musicForm.singerName = '未知歌手'
+      }
+      addMusic(musicForm).then(res => {
         if (res.success) {
           this.$message.success('添加成功')
           this.getMusicList()
@@ -176,6 +244,7 @@ export default {
       }).catch(err => console.log(err)
       )
     },
+    // 批量删除
     batchDeletMusic() {
       if (this.ids.length === 0) return this.$message.error('请选择需要删除的歌曲')
 
@@ -199,37 +268,50 @@ export default {
 
       return false
     },
+    // 控制弹框关闭
     handleClose() {
       this.dialogVisible = false
+      this.fileList = []
       this.musicForm = {
         title: '',
         musicSrc: '',
+        musicLrc: '',
         singerName: '',
+        singerId: undefined,
         album: '',
-        albumArt: ''
+        albumId: undefined
       }
-      this.$refs.userForm.clearValidate()
+      this.$refs.musicForm.clearValidate()
     },
+    // 页码大小控制
     handleSizeChange(val) {
       this.queryList.pageSize = val
       this.queryList.pageNumber = 1
       this.getMusicList()
     },
+    // 当前页码控制
     handleCurrentChange(val) {
       this.queryList.pageNumber = val
       this.getMusicList()
     },
+    // 编辑按钮的控制
     handleEdit(row) {
       this.musicForm = Object.assign({}, this.musicForm, row)
+      if (this.musicForm.singerName) {
+        this.checkSingerFunc()
+      }
       this.dialogVisible = true
       this.editFlag = true
     },
+    // 删除按钮的控制
     handleDelete(id) {
       this.ids = []
       this.ids.push(id)
       this.batchDeletMusic()
     },
+    // 多选框
     selectionChange(selection) {
+      this.ids = []
       selection.forEach(e => {
         this.ids.push(e.id)
       })

@@ -1,9 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Login from '@/views/loginSys/index.vue'
-import Home from '@/views/home/Home.vue'
-import Index from '@/views/home/index.vue'
-import MusicLibary from '@/views/musicLibary/index.vue'
 
 Vue.use(Router)
 
@@ -16,28 +13,73 @@ const router = new Router({
     children: [{
       path: '/login',
       name: '登陆系统',
-      component: Login
+      component: () => import('@/views/loginSys/index.vue')
     }]
   }, {
     path: '/home',
     name: '系统主页',
-    component: Home,
+    component: () => import('@/views/home/Home.vue'),
     redirect: '/index',
     children: [
       {
         path: '/index',
         name: '系统首页',
-        component: Index
+        component: () => import('@/views/users')
       },
       {
         path: '/userManage',
         name: '用户管理',
-        component: Index
+        component: () => import('@/views/users')
       },
       {
         path: '/musicLibary',
         name: '曲库管理',
-        component: MusicLibary
+        component: () => import('@/views/musicLibary/index.vue')
+      },
+      {
+        path: '/singer',
+        name: '歌手管理',
+        component: () => import('@/views/singer')
+      },
+      {
+        path: '/singerDetail',
+        name: '歌手详情',
+        component: () => import('@/views/singer/detail.vue')
+      },
+      {
+        path: '/songList',
+        name: '歌单管理',
+        component: () => import('@/views/songList')
+      },
+      {
+        path: '/songListMusic',
+        name: '歌单歌曲管理',
+        component: () => import('@/views/songList/detail.vue')
+      },
+      {
+        path: '/categories',
+        name: '歌曲分类管理',
+        component: () => import('@/views/category')
+      },
+      {
+        path: '/categoryMusic',
+        name: '分类音乐管理',
+        component: () => import('@/views/category/categoryMusic.vue')
+      },
+      {
+        path: '/recommend',
+        name: '今日推荐',
+        component: () => import('@/views/recommend')
+      },
+      {
+        path: '/webMessage',
+        name: '网站管理',
+        component: () => import('@/views/webSite')
+      },
+      {
+        path: '/test',
+        name: '测试',
+        component: () => import('@/views/test.vue')
       }
     ]
   }]

@@ -6,9 +6,16 @@ Vue.use(Vuex)
 
 const store = new Vuex.Store({
   state: {
-    userInfo: {}
+    token: '',
+    userInfo: {},
+    audioDialog: false,
+    audioSrc: '',
+    audioTitle: ''
   },
   getters: {
+    userToken(state) {
+      return state.token
+    },
     userInfo(state) {
       return state.userInfo
     },
@@ -56,6 +63,18 @@ const store = new Vuex.Store({
     saveUserRootList(state, data) {
       state.userInfo.rootList = data
       state.userRootList = data
+    },
+    // 弹出全局音乐对话框
+    showDialog(state, music) {
+      state.audioDialog = true
+      state.audioSrc = music.musicSrc
+      state.audioTitle = `${music.title} - ${music.singerName}`
+    },
+    // 关闭全局音乐对话框
+    closeDialog(state) {
+      state.audioDialog = false
+      state.audioSrc = ''
+      state.audioTitle = ''
     }
   }
 })

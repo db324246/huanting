@@ -31,10 +31,21 @@ app.use(session({
 const router = require('./router/index.js');
 app.use(router);
 
+// app.listen(3000, '192.168.0.107', () => {
 // app.listen(3000, '192.168.199.141', () => {
 //     console.log('服务器已启动~~~')
 // })
-
-app.listen(3000, '192.168.0.107', () => {
+const randMusic = require('./controller/recommend.js')
+app.listen(3000, '192.168.199.141', () => {
     console.log('服务器已启动~~~')
+    const rand = function () {
+        const p = new Promise(reslove => {
+            randMusic(reslove)
+        })
+        return p
+    }
+    
+    rand().then(data => {
+        if (data.success) console.log('刷新今日推荐')
+    })
 })

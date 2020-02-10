@@ -18,6 +18,15 @@ export function deleteMusic(data) {
   })
 }
 
+// 歌手查询
+export function checkSinger(data) {
+  return request({
+    url: '/checkSinger',
+    method: 'get',
+    params: data
+  })
+}
+
 // 添加歌曲
 export function addMusic(data) {
   return request({

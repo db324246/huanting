@@ -12,6 +12,9 @@ Vue.prototype.$moment = moment;
 import globalcss from '@static/global.less';
 Vue.use(globalcss)
 
+import mixin from '@/mixins'
+Vue.mixin(mixin)
+
 Vue.use(ElementUI)
 Vue.config.productionTip = false
 
